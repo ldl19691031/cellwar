@@ -1,0 +1,147 @@
+<html>
+    <head>
+            <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    </head>
+    <body>
+        
+        <canvas id="mainCanvas" width="1024" height="1024" style="position: absolute;top: 10px;left: 10px;background: lightgray;"></canvas>
+        <div id="app" style="position: absolute;top: 10px;left: 1034px;">
+                <h1>Life click game</h1>
+                <button onclick="window.setInterval(tick,1000);">Start Simulation</button>
+                <h3>generation:{{generation}}</h3>
+                <h3>player soldiers: {{playerSoldiers}}</h3>
+        </div>
+        <script>
+            const typeEmpty = 0;
+            const typePlayer = 1;
+            
+            const pointSize = 16;
+            var map_size = 1024 / 16;
+            var map = Array(map_size)
+            for (let index = 0; index < map_size; index++) {
+                map[index] = new Array(map_size);
+                for (let j = 0; j < map_size; j++) {
+                    map[index][j] = typeEmpty; //empty
+                }
+            }
+            var c=document.getElementById("mainCanvas");
+            var ctx=c.getContext("2d");
+            function drawPoint(type,x,y){
+                if(type == typePlayer){
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
+                }else if (type == typeEmpty)
+                {
+                    ctx.fillStyle = 'lightgray';
+                    ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
+                }
+                ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
+                ctx.stroke();
+            }
+            var globalData={
+                playerSoldiers : 0,
+                generation : 0
+            };
+            function updateElement(){
+                globalData.generation++;
+                for (let x = 0; x < map.length; x++) {
+                    for (let y = 0; y < map[x].length; y++) {
+                        const element = map[x][y];
+                        if (x == 0 || x == map_size-1 || y ==0 || y == map_size-1) {
+                            map[x][y] = typeEmpty;
+                        }else{
+                            if (element == typePlayer) {
+                                var playerCounter = 0;
+                                for(let kx = -1; kx < 2; kx++){
+                                    for(let ky = -1; ky <2; ky ++){
+                                        if(kx == 0 && ky == 0){
+                                            continue;
+                                        }
+                                        if(map[x+kx][y+ky]==typePlayer)
+                                        {
+                                            playerCounter++;
+                                        }
+                                    }
+                                }
+                                if(playerCounter < 2){
+                                    map[x][y] = typeEmpty;
+                                    drawPoint(typeEmpty,x,y);
+                                }else if(playerCounter > 3){
+                                    map[x][y] = typeEmpty;
+                                    drawPoint(typeEmpty,x,y);
+                                }       
+                            } else {
+                                var playerCounter = 0;
+                                for(let kx = -1; kx < 2; kx++){
+                                    for(let ky = -1; ky <2; ky ++){
+                                        if(kx == 0 && ky == 0){
+                                            continue;
+                                        }
+                                        if(map[x+kx][y+ky]==typePlayer)
+                                        {
+                                            playerCounter++;
+                                        }
+                                    }
+                                }
+                                if(playerCounter == 3){
+                                    map[x][y] = typePlayer;
+                                    drawPoint(typePlayer,x,y);
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+                globalData.playerSoldiers= 0;
+                for (let x = 0; x < map.length; x++) {
+                    for (let y = 0; y < map[x].length; y++) {
+                        if(map[x][y] == typePlayer)
+                        {
+                            globalData.playerSoldiers ++;
+                        }
+                    }
+                }
+            }
+            function RenderBackground() {
+                ctx.clearRect(0, 0, c.width, c.height);
+                for (let x = 0; x < map.length; x++) {
+                    for (let y = 0; y < map[x].length; y++) {
+                        ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
+                        
+                    }
+                }
+                ctx.stroke();
+            }
+            function getEventPosition(ev){
+                var x, y;
+                if (ev.layerX || ev.layerX == 0) {
+                    x = ev.layerX;
+                    y = ev.layerY;
+                } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+                    x = ev.offsetX;
+                    y = ev.offsetY;
+                }
+                return {x: x, y: y};
+            }
+
+            c.addEventListener('click', function(e){
+                p = getEventPosition(e);
+                x = Math.floor(p.x / pointSize);
+                y = Math.floor(p.y / pointSize);
+                map[x][y] = typePlayer;
+                drawPoint(typePlayer,x,y);
+            });
+            function tick() {
+                console.log("ticked");
+                updateElement();
+                //Render();
+            }
+
+            RenderBackground();
+            var app = new Vue({
+            el: '#app',
+            data: globalData
+            })
+        </script>
+    </body>
+</html>
