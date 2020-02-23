@@ -281,7 +281,7 @@
             forceAttackCost: 10,
             forceDefenceCost: 5,
             playerDeathRate: 0.8,
-            enemyDeathRate: 0.75,
+            enemyDeathRate: 0.725,
         };
         function forceAttack(){
             if(globalData.avaliableSeed < globalData.forceAttackCost)
@@ -545,7 +545,7 @@
 
         // explosion construction
         function explode(x, y) {
-            var particles = 15,
+            var particles = 10,
                 // explosion container and its reference to be able to delete it on animation end
                 explosion = $('<div class="explosion"></div>');
 
