@@ -304,12 +304,12 @@
             if (globalData.generation % 10 == 0) {
                 globalData.avaliableSeed++;
             }
-
+            new_map = JSON.parse(JSON.stringify(map));
             for (let x = 0; x < map.length; x++) {
                 for (let y = 0; y < map[x].length; y++) {
                     const element = map[x][y];
                     if (x == 0 || x == map_size - 1 || y == 0 || y == map_size - 1) {
-                        map[x][y] = typeEmpty;
+                        new_map[x][y]= typeEmpty;
                         drawPoint(typeEmpty, x, y);
                     } else {
                         if (element == typePlayer) {
@@ -328,14 +328,14 @@
                                 }
                             }
                             if (playerCounter < 2) {
-                                map[x][y] = typeEmpty;
+                                new_map[x][y]= typeEmpty;
                                 drawPoint(typeEmpty, x, y);
                             } else if (playerCounter > 3) {
-                                map[x][y] = typeEmpty;
+                                new_map[x][y]= typeEmpty;
                                 drawPoint(typeEmpty, x, y);
                             } else if (enemyCounter > playerCounter && globalData.forceDefence <= 0) {
                                 // defeated
-                                map[x][y] = typeEnemy;
+                                new_map[x][y]= typeEnemy;
                                 globalData.deadSoldier++;
                                 explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
                                 drawPoint(typeEnemy, x, y);
@@ -356,14 +356,14 @@
                                 }
                             }
                             if (playerCounter < 2) {
-                                map[x][y] = typeEmpty;
+                                new_map[x][y]= typeEmpty;
                                 drawPoint(typeEmpty, x, y);
                             } else if (playerCounter > 3) {
-                                map[x][y] = typeEmpty;
+                                new_map[x][y]= typeEmpty;
                                 drawPoint(typeEmpty, x, y);
                             } else if (enemyCounter > playerCounter) {
                                 // defeated
-                                map[x][y] = typePlayer;
+                                new_map[x][y]= typePlayer;
                                 globalData.killedEnemy++;
                                 if (globalData.killedEnemy % 3 == 0) {
                                     globalData.avaliableSeed++;
@@ -373,7 +373,7 @@
                             } else if (globalData.forceAttack >0 && enemyCounter > 0)
                             {
                                 // force attack
-                                map[x][y] = typePlayer;
+                                new_map[x][y]= typePlayer;
                                 globalData.killedEnemy++;
                                 explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
                                 drawPoint(typePlayer, x, y);
@@ -395,10 +395,10 @@
                                 }
                             }
                             if (playerCounter == 3 && enemyCounter != 3) {
-                                map[x][y] = typePlayer;
+                                new_map[x][y]= typePlayer;
                                 drawPoint(typePlayer, x, y);
                             } else if (enemyCounter == 3 && playerCounter != 3) {
-                                map[x][y] = typeEnemy;
+                                new_map[x][y]= typeEnemy;
                                 drawPoint(typeEnemy, x, y);
                             }
                         }
@@ -411,9 +411,9 @@
             globalData.enemyPeople = 0;
             for (let x = 0; x < map.length; x++) {
                 for (let y = 0; y < map[x].length; y++) {
-                    if (map[x][y] == typePlayer) {
+                    if (new_map[x][y]== typePlayer) {
                         globalData.playerPeople++;
-                    } else if (map[x][y] == typeEnemy) {
+                    } else if (new_map[x][y]== typeEnemy) {
                         globalData.enemyPeople++;
                     }
                 }
@@ -425,6 +425,11 @@
             if(globalData.forceDefence > 0)
             {
                 globalData.forceDefence --;
+            }
+            for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                    map[x][y] = new_map[x][y];
+                }
             }
         }
         function RenderBackground() {
