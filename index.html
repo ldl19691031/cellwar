@@ -1,22 +1,39 @@
 <html>
     <head>
             <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
     </head>
     <body>
-        
-        <canvas id="mainCanvas" width="1024" height="1024" style="position: absolute;top: 10px;left: 10px;background: lightgray;"></canvas>
+        <canvas id="fgCanvas" width="1024" height="1024" style="position: absolute;top: 10px;left: 10px;z-index: 1;"></canvas>
+        <canvas id="mainCanvas" width="1024" height="1024" style="position: absolute;top: 10px;left: 10px;background: lightgray;z-index: 0;"></canvas>
         <div id="app" style="position: absolute;top: 10px;left: 1034px;">
                 <h1>Life click game</h1>
-                <button onclick="window.setInterval(tick,1000);">Start Simulation</button>
+                
                 <h3>generation:{{generation}}</h3>
                 <h3>player soldiers: {{playerSoldiers}}</h3>
+                <h3>avaliable seed: {{avaliableSeed}}</h3>
+                <h3>killed enemy: {{killedEnemy}}</h3>
+                <h3>dead solider: {{deadSoldier}}</h3>
+                <h3 v-if="avaliableSeed > 0"> Please set {{avaliableSeed}} points as initial seed.</h3>
+                <button onclick="window.setInterval(tick,1000);">Start Simulation</button><br/>
+                生命游戏中，对于任意细胞，规则如下：<br/>
+
+                每个细胞有两种状态 - 存活或死亡，每个细胞与以自身为中心的周围八格细胞产生互动（如图，黑色为存活，白色为死亡）<br/>
+                当前细胞为存活状态时，当周围的存活细胞低于2个时（不包含2个），该细胞变成死亡状态。（模拟生命数量稀少）<br/>
+                当前细胞为存活状态时，当周围有2个或3个存活细胞时，该细胞保持原样。<br/>
+                当前细胞为存活状态时，当周围有超过3个存活细胞时，该细胞变成死亡状态。（模拟生命数量过多）<br/>
+                当前细胞为死亡状态时，当周围有3个存活细胞时，该细胞变成存活状态。<br/>
+                <br/>
+                开局你拥有 {{avaliableSeed}} 个随机种子，请拜访他们。<br/>
+                每10回合你将获得一个新的随机种子，可以添加到世界中。<br/>
+                同时，你方击杀对方，也将获得新的种子。<br/>
         </div>
         <script>
             const typeEmpty = 0;
             const typePlayer = 1;
-            
-            const pointSize = 16;
-            var map_size = 1024 / 16;
+            const typeEnemy = 2;
+            const pointSize = 32;
+            var map_size = 1024 / pointSize;
             var map = Array(map_size)
             for (let index = 0; index < map_size; index++) {
                 map[index] = new Array(map_size);
@@ -24,8 +41,12 @@
                     map[index][j] = typeEmpty; //empty
                 }
             }
+
+
             var c=document.getElementById("mainCanvas");
+            var fgc = document.getElementById("fgCanvas");
             var ctx=c.getContext("2d");
+            var fgctx = fgc.getContext("2d");
             function drawPoint(type,x,y){
                 if(type == typePlayer){
                     ctx.fillStyle = 'black';
@@ -34,16 +55,27 @@
                 {
                     ctx.fillStyle = 'lightgray';
                     ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
+                }else if (type == typeEnemy)
+                {
+                    ctx.fillStyle = 'red';
+                    ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
                 }
-                ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
-                ctx.stroke();
+                // ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
+                // ctx.stroke();
             }
             var globalData={
                 playerSoldiers : 0,
-                generation : 0
+                generation : 0,
+                avaliableSeed: 0,
+                killedEnemy:0,
+                deadSoldier:0,
             };
             function updateElement(){
                 globalData.generation++;
+                if(globalData.generation % 10 == 0)
+                {
+                    globalData.avaliableSeed ++;
+                }
                 for (let x = 0; x < map.length; x++) {
                     for (let y = 0; y < map[x].length; y++) {
                         const element = map[x][y];
@@ -52,6 +84,7 @@
                         }else{
                             if (element == typePlayer) {
                                 var playerCounter = 0;
+                                var enemyCounter = 0;
                                 for(let kx = -1; kx < 2; kx++){
                                     for(let ky = -1; ky <2; ky ++){
                                         if(kx == 0 && ky == 0){
@@ -60,6 +93,9 @@
                                         if(map[x+kx][y+ky]==typePlayer)
                                         {
                                             playerCounter++;
+                                        }else if(map[x+kx][y+ky]==typeEnemy)
+                                        {
+                                            enemyCounter++;
                                         }
                                     }
                                 }
@@ -69,9 +105,49 @@
                                 }else if(playerCounter > 3){
                                     map[x][y] = typeEmpty;
                                     drawPoint(typeEmpty,x,y);
+                                }else if (enemyCounter> playerCounter)
+                                {
+                                    // defeated
+                                    map[x][y] = typeEmpty;
+                                    globalData.deadSoldier++;
+                                    drawPoint(typeEmpty,x,y);
                                 }       
-                            } else {
+                            } else if (element == typeEnemy)
+                            {
                                 var playerCounter = 0;
+                                var enemyCounter = 0;
+                                for(let kx = -1; kx < 2; kx++){
+                                    for(let ky = -1; ky <2; ky ++){
+                                        if(kx == 0 && ky == 0){
+                                            continue;
+                                        }
+                                        if(map[x+kx][y+ky]==typeEnemy)
+                                        {
+                                            playerCounter++;
+                                        }else if(map[x+kx][y+ky]==typePlayer)
+                                        {
+                                            enemyCounter++;
+                                        }
+                                    }
+                                }
+                                if(playerCounter < 2){
+                                    map[x][y] = typeEmpty;
+                                    drawPoint(typeEmpty,x,y);
+                                }else if(playerCounter > 3){
+                                    map[x][y] = typeEmpty;
+                                    drawPoint(typeEmpty,x,y);
+                                } else if (enemyCounter> playerCounter)
+                                {
+                                    // defeated
+                                    map[x][y] = typeEmpty;
+                                    globalData.killedEnemy++;
+                                    globalData.avaliableSeed++;
+                                    drawPoint(typeEmpty,x,y);
+                                }   
+                            }
+                            else {
+                                var playerCounter = 0;
+                                var enemyCounter = 0;
                                 for(let kx = -1; kx < 2; kx++){
                                     for(let ky = -1; ky <2; ky ++){
                                         if(kx == 0 && ky == 0){
@@ -80,12 +156,18 @@
                                         if(map[x+kx][y+ky]==typePlayer)
                                         {
                                             playerCounter++;
+                                        }else if(map[x+kx][y+ky]==typeEnemy)
+                                        {
+                                            enemyCounter++;
                                         }
                                     }
                                 }
-                                if(playerCounter == 3){
+                                if(playerCounter == 3 && enemyCounter != 3){
                                     map[x][y] = typePlayer;
                                     drawPoint(typePlayer,x,y);
+                                }else if (enemyCounter == 3 && playerCounter != 3){
+                                    map[x][y] = typeEnemy;
+                                    drawPoint(typeEnemy,x,y);
                                 }
                             }
                         }
@@ -103,14 +185,14 @@
                 }
             }
             function RenderBackground() {
-                ctx.clearRect(0, 0, c.width, c.height);
+                fgctx.clearRect(0, 0, c.width, c.height);
                 for (let x = 0; x < map.length; x++) {
                     for (let y = 0; y < map[x].length; y++) {
-                        ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
+                        fgctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
                         
                     }
                 }
-                ctx.stroke();
+                fgctx.stroke();
             }
             function getEventPosition(ev){
                 var x, y;
@@ -124,20 +206,38 @@
                 return {x: x, y: y};
             }
 
-            c.addEventListener('click', function(e){
+            fgc.addEventListener('click', function(e){
                 p = getEventPosition(e);
                 x = Math.floor(p.x / pointSize);
                 y = Math.floor(p.y / pointSize);
-                map[x][y] = typePlayer;
-                drawPoint(typePlayer,x,y);
+                if(globalData.avaliableSeed > 0)
+                {
+                    map[x][y] = typePlayer;
+                    drawPoint(typePlayer,x,y);
+                    globalData.avaliableSeed--;
+                }
+
             });
             function tick() {
                 console.log("ticked");
                 updateElement();
                 //Render();
             }
-
+            function initMap(){
+                for (let x = 0; x < map.length / 3; x++) {
+                    for (let y = 0; y < map[x].length / 3; y++) {
+                        if(Math.random()<0.3)
+                        {
+                            map[x][y] = typeEnemy;
+                            globalData.avaliableSeed++;
+                            drawPoint(typeEnemy,x,y);
+                        }
+                    }
+                }
+            }
+            
             RenderBackground();
+            initMap();
             var app = new Vue({
             el: '#app',
             data: globalData
