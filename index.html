@@ -126,7 +126,10 @@
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
             <h1>Cell War</h1>
             <h3>player People: {{playerPeople}} / enemy People {{ enemyPeople }}</h3>
-
+            <svg width="600" height="20">
+                <rect v-bind:width="playerPeople / (playerPeople + enemyPeople) * 600" height="20" style="fill:darkslategray;stroke-width:1;stroke:rgb(0,0,0)" />
+                <rect v-bind:x="playerPeople / (playerPeople + enemyPeople) * 600" v-bind:width="enemyPeople / (playerPeople + enemyPeople) * 600" height="20" style="fill:salmon;stroke-width:1;stroke:rgb(0,0,0)" />
+              </svg>
             <table class="table">
                 <tr>
                     <th>generation</th>
@@ -169,10 +172,10 @@
                     class="pure-button">10x Simulation</button>
             </div>
             <div class="btn-group" role="group" style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
-                <button type="button" onclick="forceAttack()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，3回合内强行推进我方战线">
+                <button type="button" onclick="forceAttack()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，4回合内强行推进我方战线">
                     Force Attack ( {{globalData.forceAttackCost}} seed )
                 </button>
-                <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，3回合内敌方无法推进我方战线">
+                <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，4回合内敌方无法推进我方战线">
                     Force Defence ( {{globalData.forceDefenceCost}} seed )
                 </button>
               </div>
@@ -212,7 +215,7 @@
                 </div>
                 <div class="tab-pane fade" id="control" role="tabpanel" aria-labelledby="contact-tab">
                     <h2>玩家控制</h2>
-                    开局你拥有 {{avaliableSeed}} 个随机种子，请摆放他们。摆放的目标位置周围的8个格子内不能有敌方细胞<br />
+                    开局你拥有 {{avaliableSeed}} 个随机种子，请点击鼠标左键摆放他们。摆放的目标位置周围的8个格子内不能有敌方细胞<br />
                     每10回合你将获得一个新的随机种子，可以添加到世界中。<br />
                     同时，你方击杀对方，也将获得新的种子。<br />
                 </div>
@@ -281,7 +284,7 @@
                 alert("need more seed");
                 return;
             }
-            globalData.forceAttack += 3;
+            globalData.forceAttack += 4;
             globalData.avaliableSeed -= globalData.forceAttackCost;
             globalData.forceAttackCost++;
         }
@@ -291,7 +294,7 @@
                 alert("need more seed");
                 return;
             }
-            globalData.forceDefence += 3;
+            globalData.forceDefence += 4;
             globalData.avaliableSeed -= globalData.forceDefenceCost;
             globalData.forceDefenceCost++;
         }
@@ -331,10 +334,10 @@
                                 drawPoint(typeEmpty, x, y);
                             } else if (enemyCounter > playerCounter && globalData.forceDefence <= 0) {
                                 // defeated
-                                map[x][y] = typeEmpty;
+                                map[x][y] = typeEnemy;
                                 globalData.deadSoldier++;
                                 explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
-                                drawPoint(typeEmpty, x, y);
+                                drawPoint(typeEnemy, x, y);
                             }
                         } else if (element == typeEnemy) {
                             var playerCounter = 0;
@@ -359,13 +362,13 @@
                                 drawPoint(typeEmpty, x, y);
                             } else if (enemyCounter > playerCounter) {
                                 // defeated
-                                map[x][y] = typeEmpty;
+                                map[x][y] = typePlayer;
                                 globalData.killedEnemy++;
                                 if (globalData.killedEnemy % 3 == 0) {
                                     globalData.avaliableSeed++;
                                 }
                                 explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
-                                drawPoint(typeEmpty, x, y);
+                                drawPoint(typePlayer, x, y);
                             } else if (globalData.forceAttack >0 && enemyCounter > 0)
                             {
                                 // force attack
