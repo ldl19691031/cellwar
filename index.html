@@ -125,7 +125,7 @@
     <div id="app" style="position: absolute;top: 10px;left: 1044px;">
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
             <h1>Cell War</h1>
-            <p>v 0.0.1</p>
+            <p>v 0.0.2</p>
             <h3>player People: {{playerPeople}} / enemy People {{ enemyPeople }}</h3>
             <svg width="600" height="20">
                 <rect v-bind:width="playerPeople / (playerPeople + enemyPeople) * 600" height="20" style="fill:darkslategray;stroke-width:1;stroke:rgb(0,0,0)" />
@@ -474,6 +474,10 @@
             p = getEventPosition(e);
             x = Math.floor(p.x / pointSize);
             y = Math.floor(p.y / pointSize);
+            if(map[x][y] == typePlayer || map[x][y] == typeEnemy)
+            {
+                return;
+            }
             if (globalData.avaliableSeed > 0) {
                 enemyAround = 0;
                 for (let kx = -1; kx < 2; kx++) {
