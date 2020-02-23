@@ -125,6 +125,7 @@
     <div id="app" style="position: absolute;top: 10px;left: 1044px;">
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
             <h1>Cell War</h1>
+            <p>v 0.0.1</p>
             <h3>player People: {{playerPeople}} / enemy People {{ enemyPeople }}</h3>
             <svg width="600" height="20">
                 <rect v-bind:width="playerPeople / (playerPeople + enemyPeople) * 600" height="20" style="fill:darkslategray;stroke-width:1;stroke:rgb(0,0,0)" />
@@ -173,11 +174,11 @@
                     <button onClick="window.location.reload();" class="pure-button" style="background-color: lightcoral;">Reset</button>
             </div>
             <div class="btn-group" role="group" style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
-                <button type="button" onclick="forceAttack()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，4回合内强行推进我方战线">
+                <button type="button" onclick="forceAttack()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，3回合内强行推进我方战线">
                     Force Attack ( {{globalData.forceAttackCost}} seed )
                 </button>
-                <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，4回合内敌方无法推进我方战线">
-                    Force Defence ( {{globalData.forceDefenceCost}} seed )
+                <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子进行强制征兵，4回合内强行降低我方死亡率">
+                    Force Conscript ( {{globalData.forceDefenceCost}} seed )
                 </button>
               </div>
         </div>
@@ -206,7 +207,8 @@
                     1. 每个细胞有两种状态 - 存活或死亡，每个细胞与以自身为中心的周围八格细胞产生互动（如图，黑色为存活，白色为死亡）<br />
                     2. 当前细胞为存活状态时，当周围的存活细胞低于2个时（不包含2个），该细胞变成死亡状态。（模拟生命数量稀少）<br />
                     3. 当前细胞为存活状态时，当周围有2个或3个存活细胞时，该细胞保持原样。<br />
-                    4. 当前细胞为存活状态时，当周围有超过3个存活细胞时，该细胞变成死亡状态。（模拟生命数量过多）<br />
+                    4. 当前细胞为存活状态时，当周围有超过3个存活细胞时，该细胞<b>按一定概率</b>变成死亡状态。（模拟生命数量过多）<br />
+                    <strong>请注意，这与标准的生命游戏不同！并且，敌人会有略微低一些的死亡率，从而平衡敌人与玩家的难度。</strong><br/>
                     5. 当前细胞为死亡状态时，当周围有3个存活细胞时，该细胞变成存活状态。<br />
                 </div>
                 <div class="tab-pane fade" id="war" role="tabpanel" aria-labelledby="profile-tab">
@@ -278,6 +280,8 @@
             forceDefence: 0,
             forceAttackCost: 10,
             forceDefenceCost: 5,
+            playerDeathRate: 0.8,
+            enemyDeathRate: 0.75,
         };
         function forceAttack(){
             if(globalData.avaliableSeed < globalData.forceAttackCost)
@@ -285,7 +289,7 @@
                 alert("need more seed");
                 return;
             }
-            globalData.forceAttack += 4;
+            globalData.forceAttack += 3;
             globalData.avaliableSeed -= globalData.forceAttackCost;
             globalData.forceAttackCost++;
         }
@@ -295,7 +299,8 @@
                 alert("need more seed");
                 return;
             }
-            globalData.forceDefence += 4;
+            globalData.forceDefence +=4;
+            globalData.playerDeathRate = 0.35;
             globalData.avaliableSeed -= globalData.forceDefenceCost;
             globalData.forceDefenceCost++;
         }
@@ -331,9 +336,13 @@
                                 new_map[x][y]= typeEmpty;
                                 drawPoint(typeEmpty, x, y);
                             } else if (playerCounter > 3) {
-                                new_map[x][y]= typeEmpty;
-                                drawPoint(typeEmpty, x, y);
-                            } else if (enemyCounter > playerCounter && globalData.forceDefence <= 0) {
+                                if(Math.random()< globalData.playerDeathRate)
+                                {
+                                    new_map[x][y]= typeEmpty;
+                                    drawPoint(typeEmpty, x, y);
+                                }
+ 
+                            } else if (enemyCounter > playerCounter) {
                                 // defeated
                                 new_map[x][y]= typeEnemy;
                                 globalData.deadSoldier++;
@@ -359,8 +368,11 @@
                                 new_map[x][y]= typeEmpty;
                                 drawPoint(typeEmpty, x, y);
                             } else if (playerCounter > 3) {
-                                new_map[x][y]= typeEmpty;
-                                drawPoint(typeEmpty, x, y);
+                                if(Math.random()<globalData.enemyDeathRate)
+                                {
+                                    new_map[x][y]= typeEmpty;
+                                    drawPoint(typeEmpty, x, y);
+                                }
                             } else if (enemyCounter > playerCounter) {
                                 // defeated
                                 new_map[x][y]= typePlayer;
@@ -425,6 +437,10 @@
             if(globalData.forceDefence > 0)
             {
                 globalData.forceDefence --;
+                if(globalData.forceDefence == 0)
+                {
+                    globalData.playerDeathRate = 0.8;
+                }
             }
             for (let x = 0; x < map.length; x++) {
                 for (let y = 0; y < map[x].length; y++) {
@@ -493,7 +509,7 @@
         function initMap() {
             for (let x = 0; x < map.length / 2; x++) {
                 for (let y = 0; y < map[x].length / 2; y++) {
-                    if (Math.random() < 0.3) {
+                    if (Math.random() < 0.5) {
                         map[x][y] = typeEnemy;
                         //globalData.avaliableSeed++;
                         drawPoint(typeEnemy, x, y);
@@ -502,7 +518,7 @@
             }
             for (let x = map.length / 2; x < map.length; x++) {
                 for (let y = map.length / 2; y < map.length; y++) {
-                    if (Math.random() < 0.3) {
+                    if (Math.random() < 0.5) {
                         map[x][y] = typePlayer;
                         //globalData.avaliableSeed++;
                         drawPoint(typePlayer, x, y);
