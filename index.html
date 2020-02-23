@@ -1,247 +1,563 @@
 <html>
-    <head>
-            <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 
-    </head>
-    <body>
-        <canvas id="fgCanvas" width="1024" height="1024" style="position: absolute;top: 10px;left: 10px;z-index: 1;"></canvas>
-        <canvas id="mainCanvas" width="1024" height="1024" style="position: absolute;top: 10px;left: 10px;background: lightgray;z-index: 0;"></canvas>
-        <div id="app" style="position: absolute;top: 10px;left: 1034px;">
-                <h1>Life click game</h1>
-                
-                <h3>generation:{{generation}}</h3>
-                <h3>player soldiers: {{playerSoldiers}}</h3>
-                <h3>avaliable seed: {{avaliableSeed}}</h3>
-                <h3>killed enemy: {{killedEnemy}}</h3>
-                <h3>dead solider: {{deadSoldier}}</h3>
-                <h3 v-if="avaliableSeed > 0"> Please set {{avaliableSeed}} points as initial seed.</h3>
-                <button onclick="window.setInterval(tick,1000);">Start Simulation</button><br/>
-                生命游戏中，对于任意细胞，规则如下：<br/>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+    <title>cell war</title>
+    <style>
+        .explosion {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            pointer-events: none;
+        }
 
-                每个细胞有两种状态 - 存活或死亡，每个细胞与以自身为中心的周围八格细胞产生互动（如图，黑色为存活，白色为死亡）<br/>
-                当前细胞为存活状态时，当周围的存活细胞低于2个时（不包含2个），该细胞变成死亡状态。（模拟生命数量稀少）<br/>
-                当前细胞为存活状态时，当周围有2个或3个存活细胞时，该细胞保持原样。<br/>
-                当前细胞为存活状态时，当周围有超过3个存活细胞时，该细胞变成死亡状态。（模拟生命数量过多）<br/>
-                当前细胞为死亡状态时，当周围有3个存活细胞时，该细胞变成存活状态。<br/>
-                <br/>
-                开局你拥有 {{avaliableSeed}} 个随机种子，请拜访他们。<br/>
-                每10回合你将获得一个新的随机种子，可以添加到世界中。<br/>
-                同时，你方击杀对方，也将获得新的种子。<br/>
+        .explosion .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 0%;
+            animation: pop 1s reverse forwards;
+        }
+
+        @keyframes pop {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                top: 50%;
+                left: 50%;
+                opacity: 1;
+            }
+        }
+
+        .moduleAnimationShock {
+            animation-name: diagonal-slide;
+            animation-duration: 0.05s;
+            animation-iteration-count: 10;
+            animation-fill-mode: forwards;
+        }
+
+        table.greyGridTable {
+            border: 2px solid #FFFFFF;
+            width: 100%;
+            text-align: center;
+            border-collapse: collapse;
+        }
+
+        table.greyGridTable td,
+        table.greyGridTable th {
+            border: 1px solid #FFFFFF;
+            padding: 3px 4px;
+        }
+
+        table.greyGridTable tbody td {
+            font-size: 13px;
+        }
+
+        table.greyGridTable td:nth-child(even) {
+            background: #EBEBEB;
+        }
+
+        table.greyGridTable tfoot td {
+            font-size: 14px;
+        }
+
+        @keyframes diagonal-slide {
+            from {
+                top: 0;
+                left: 0;
+                animation-timing-function: linear;
+            }
+
+            20% {
+                top: -5px;
+                left: -5px;
+                animation-timing-function: linear;
+            }
+
+            40% {
+                top: 5px;
+                left: -5px;
+                animation-timing-function: linear;
+            }
+
+            60% {
+                top: 5px;
+                left: 5px;
+                animation-timing-function: linear;
+            }
+
+            80% {
+                top: -5px;
+                left: 5px;
+                animation-timing-function: linear;
+            }
+
+            to {
+                top: 0;
+                left: 0;
+                animation-timing-function: linear;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css"
+        integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+</head>
+
+<body>
+    <canvas id="fgCanvas" width="1024" height="1024"
+        style="position: absolute;top: 10px;left: 10px;z-index: 1;"></canvas>
+    <canvas id="mainCanvas" width="1024" height="1024"
+        style="position: absolute;top: 10px;left: 10px;background: lightgray;z-index: 0;"></canvas>
+    <div id="app" style="position: absolute;top: 10px;left: 1044px;">
+        <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
+            <h1>Cell War</h1>
+            <h3>player People: {{playerPeople}} / enemy People {{ enemyPeople }}</h3>
+
+            <table class="table">
+                <tr>
+                    <th>generation</th>
+                    <td>{{generation}}</th>
+                </tr>
+                <tr>
+                    <th>avaliable seed</th>
+                    <td>{{avaliableSeed}}</th>
+                </tr>
+                <tr>
+                    <th>killed enemy</th>
+                    <td>{{killedEnemy}}</th>
+                </tr>
+                <tr>
+                    <th>dead soldier</th>
+                    <td>{{deadSoldier}}</th>
+                </tr>
+            </table>
+            <!-- <h3>generation:{{generation}}</h3>
+            
+            <h3>avaliable seed: {{avaliableSeed}}</h3>
+            <h3>killed enemy: {{killedEnemy}}</h3>
+            <h3>dead solider: {{deadSoldier}}</h3> -->
+            <h3 v-if="avaliableSeed > 0"> Please set {{avaliableSeed}} points as initial seed.</h3>
+            <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
+
+                <button
+                    onclick="if (globalData.tickHandle != null){window.clearInterval(globalData.tickHandle);}globalData.tickHandle=window.setInterval(tick,1000);"
+                    class="pure-button">Start Simulation</button>
+                <button onclick="window.clearInterval(globalData.tickHandle);globalData.tickHandle=null;"
+                    class="pure-button">Pause Simulation</button>
+                <button
+                    onclick="if (globalData.tickHandle != null){window.clearInterval(globalData.tickHandle);}globalData.tickHandle=window.setInterval(tick,500);"
+                    class="pure-button">2x Simulation</button>
+                <button
+                    onclick="if (globalData.tickHandle != null){window.clearInterval(globalData.tickHandle);}globalData.tickHandle=window.setInterval(tick,250);"
+                    class="pure-button">4x Simulation</button>
+                <button
+                    onclick="if (globalData.tickHandle != null){window.clearInterval(globalData.tickHandle);}globalData.tickHandle=window.setInterval(tick,100);"
+                    class="pure-button">10x Simulation</button>
+            </div>
+            <div class="btn-group" role="group" style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
+                <button type="button" onclick="forceAttack()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，3回合内强行推进我方战线">
+                    Force Attack ( {{globalData.forceAttackCost}} seed )
+                </button>
+                <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip" data-placement="top" title="消耗种子，3回合内敌方无法推进我方战线">
+                    Force Defence ( {{globalData.forceDefenceCost}} seed )
+                </button>
+              </div>
         </div>
-        <script>
-            const typeEmpty = 0;
-            const typePlayer = 1;
-            const typeEnemy = 2;
-            const pointSize = 32;
-            var map_size = 1024 / pointSize;
-            var map = Array(map_size)
-            for (let index = 0; index < map_size; index++) {
-                map[index] = new Array(map_size);
-                for (let j = 0; j < map_size; j++) {
-                    map[index][j] = typeEmpty; //empty
-                }
-            }
+        <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="basci-tab" data-toggle="tab" href="#basic" role="tab"
+                        aria-controls="basic" aria-selected="true">Basic</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="war-tab" data-toggle="tab" href="#war" role="tab"
+                        aria-controls="war" aria-selected="false">War</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="controltab" data-toggle="tab" href="#control" role="tab"
+                        aria-controls="control" aria-selected="false">Control</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="advance-tab" data-toggle="tab" href="#advance" role="tab"
+                        aria-controls="advance" aria-selected="false">Advance</a>
+                </li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="home-tab">
+                    <h2>基础规则</h2>
+                    1. 每个细胞有两种状态 - 存活或死亡，每个细胞与以自身为中心的周围八格细胞产生互动（如图，黑色为存活，白色为死亡）<br />
+                    2. 当前细胞为存活状态时，当周围的存活细胞低于2个时（不包含2个），该细胞变成死亡状态。（模拟生命数量稀少）<br />
+                    3. 当前细胞为存活状态时，当周围有2个或3个存活细胞时，该细胞保持原样。<br />
+                    4. 当前细胞为存活状态时，当周围有超过3个存活细胞时，该细胞变成死亡状态。（模拟生命数量过多）<br />
+                    5. 当前细胞为死亡状态时，当周围有3个存活细胞时，该细胞变成存活状态。<br />
+                </div>
+                <div class="tab-pane fade" id="war" role="tabpanel" aria-labelledby="profile-tab">
+                    <h2>战争规则</h2>
+                    当某个细胞周围的己方细胞少于敌方细胞时，细胞死亡。<br />
+                    玩家的细胞每杀死3个敌方细胞，则获得一个随机种子<br />
+                </div>
+                <div class="tab-pane fade" id="control" role="tabpanel" aria-labelledby="contact-tab">
+                    <h2>玩家控制</h2>
+                    开局你拥有 {{avaliableSeed}} 个随机种子，请摆放他们。摆放的目标位置周围的8个格子内不能有敌方细胞<br />
+                    每10回合你将获得一个新的随机种子，可以添加到世界中。<br />
+                    同时，你方击杀对方，也将获得新的种子。<br />
+                </div>
+                <div class="tab-pane fade" id="advance" role="tabpanel" aria-labelledby="contact-tab">
+                    <h2>进阶介绍</h2>
+                    系统的基石是“康威生命游戏”，你可以点击<a href="https://zhuanlan.zhihu.com/p/45026142" target="_blank">这里</a>来查看更多的信息
+                </div>
+            </div>
+            生命游戏中，对于任意细胞，规则如下：<br />
+
+            <br />
 
 
-            var c=document.getElementById("mainCanvas");
-            var fgc = document.getElementById("fgCanvas");
-            var ctx=c.getContext("2d");
-            var fgctx = fgc.getContext("2d");
-            function drawPoint(type,x,y){
-                if(type == typePlayer){
-                    ctx.fillStyle = 'black';
-                    ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
-                }else if (type == typeEmpty)
-                {
-                    ctx.fillStyle = 'lightgray';
-                    ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
-                }else if (type == typeEnemy)
-                {
-                    ctx.fillStyle = 'red';
-                    ctx.fillRect(x*pointSize,y*pointSize,pointSize,pointSize);
-                }
-                // ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
-                // ctx.stroke();
+
+        </div>
+    </div>
+    <script>
+        const typeEmpty = 0;
+        const typePlayer = 1;
+        const typeEnemy = 2;
+        const pointSize = 16;
+        var map_size = 1024 / pointSize;
+        var map = Array(map_size)
+        for (let index = 0; index < map_size; index++) {
+            map[index] = new Array(map_size);
+            for (let j = 0; j < map_size; j++) {
+                map[index][j] = typeEmpty; //empty
             }
-            var globalData={
-                playerSoldiers : 0,
-                generation : 0,
-                avaliableSeed: 0,
-                killedEnemy:0,
-                deadSoldier:0,
-            };
-            function updateElement(){
-                globalData.generation++;
-                if(globalData.generation % 10 == 0)
-                {
-                    globalData.avaliableSeed ++;
-                }
-                for (let x = 0; x < map.length; x++) {
-                    for (let y = 0; y < map[x].length; y++) {
-                        const element = map[x][y];
-                        if (x == 0 || x == map_size-1 || y ==0 || y == map_size-1) {
-                            map[x][y] = typeEmpty;
-                        }else{
-                            if (element == typePlayer) {
-                                var playerCounter = 0;
-                                var enemyCounter = 0;
-                                for(let kx = -1; kx < 2; kx++){
-                                    for(let ky = -1; ky <2; ky ++){
-                                        if(kx == 0 && ky == 0){
-                                            continue;
-                                        }
-                                        if(map[x+kx][y+ky]==typePlayer)
-                                        {
-                                            playerCounter++;
-                                        }else if(map[x+kx][y+ky]==typeEnemy)
-                                        {
-                                            enemyCounter++;
-                                        }
+        }
+
+
+        var c = document.getElementById("mainCanvas");
+        var fgc = document.getElementById("fgCanvas");
+        var ctx = c.getContext("2d");
+        var fgctx = fgc.getContext("2d");
+        function drawPoint(type, x, y) {
+            if (type == typePlayer) {
+                ctx.fillStyle = 'darkslategray';
+                ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+            } else if (type == typeEmpty) {
+                ctx.fillStyle = 'lightgray';
+                ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+            } else if (type == typeEnemy) {
+                ctx.fillStyle = 'salmon';
+                ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+            }
+            // ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
+            // ctx.stroke();
+        }
+        var globalData = {
+            playerPeople: 0,
+            enemyPeople: 0,
+            generation: 0,
+            avaliableSeed: 4,
+            killedEnemy: 0,
+            deadSoldier: 0,
+            tickHandle: null,
+            forceAttack: 0,
+            forceDefence: 0,
+            forceAttackCost: 10,
+            forceDefenceCost: 5,
+        };
+        function forceAttack(){
+            if(globalData.avaliableSeed < globalData.forceAttackCost)
+            {
+                alert("need more seed");
+                return;
+            }
+            globalData.forceAttack += 3;
+            globalData.avaliableSeed -= globalData.forceAttackCost;
+            globalData.forceAttackCost++;
+        }
+        function forceDefence(){
+            if(globalData.avaliableSeed < globalData.forceDefenceCost)
+            {
+                alert("need more seed");
+                return;
+            }
+            globalData.forceDefence += 3;
+            globalData.avaliableSeed -= globalData.forceDefenceCost;
+            globalData.forceDefenceCost++;
+        }
+        function updateElement() {
+            globalData.generation++;
+            if (globalData.generation % 10 == 0) {
+                globalData.avaliableSeed++;
+            }
+
+            for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                    const element = map[x][y];
+                    if (x == 0 || x == map_size - 1 || y == 0 || y == map_size - 1) {
+                        map[x][y] = typeEmpty;
+                        drawPoint(typeEmpty, x, y);
+                    } else {
+                        if (element == typePlayer) {
+                            var playerCounter = 0;
+                            var enemyCounter = 0;
+                            for (let kx = -1; kx < 2; kx++) {
+                                for (let ky = -1; ky < 2; ky++) {
+                                    if (kx == 0 && ky == 0) {
+                                        continue;
+                                    }
+                                    if (map[x + kx][y + ky] == typePlayer) {
+                                        playerCounter++;
+                                    } else if (map[x + kx][y + ky] == typeEnemy) {
+                                        enemyCounter++;
                                     }
                                 }
-                                if(playerCounter < 2){
-                                    map[x][y] = typeEmpty;
-                                    drawPoint(typeEmpty,x,y);
-                                }else if(playerCounter > 3){
-                                    map[x][y] = typeEmpty;
-                                    drawPoint(typeEmpty,x,y);
-                                }else if (enemyCounter> playerCounter)
-                                {
-                                    // defeated
-                                    map[x][y] = typeEmpty;
-                                    globalData.deadSoldier++;
-                                    drawPoint(typeEmpty,x,y);
-                                }       
-                            } else if (element == typeEnemy)
-                            {
-                                var playerCounter = 0;
-                                var enemyCounter = 0;
-                                for(let kx = -1; kx < 2; kx++){
-                                    for(let ky = -1; ky <2; ky ++){
-                                        if(kx == 0 && ky == 0){
-                                            continue;
-                                        }
-                                        if(map[x+kx][y+ky]==typeEnemy)
-                                        {
-                                            playerCounter++;
-                                        }else if(map[x+kx][y+ky]==typePlayer)
-                                        {
-                                            enemyCounter++;
-                                        }
+                            }
+                            if (playerCounter < 2) {
+                                map[x][y] = typeEmpty;
+                                drawPoint(typeEmpty, x, y);
+                            } else if (playerCounter > 3) {
+                                map[x][y] = typeEmpty;
+                                drawPoint(typeEmpty, x, y);
+                            } else if (enemyCounter > playerCounter && globalData.forceDefence <= 0) {
+                                // defeated
+                                map[x][y] = typeEmpty;
+                                globalData.deadSoldier++;
+                                explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
+                                drawPoint(typeEmpty, x, y);
+                            }
+                        } else if (element == typeEnemy) {
+                            var playerCounter = 0;
+                            var enemyCounter = 0;
+                            for (let kx = -1; kx < 2; kx++) {
+                                for (let ky = -1; ky < 2; ky++) {
+                                    if (kx == 0 && ky == 0) {
+                                        continue;
+                                    }
+                                    if (map[x + kx][y + ky] == typeEnemy) {
+                                        playerCounter++;
+                                    } else if (map[x + kx][y + ky] == typePlayer) {
+                                        enemyCounter++;
                                     }
                                 }
-                                if(playerCounter < 2){
-                                    map[x][y] = typeEmpty;
-                                    drawPoint(typeEmpty,x,y);
-                                }else if(playerCounter > 3){
-                                    map[x][y] = typeEmpty;
-                                    drawPoint(typeEmpty,x,y);
-                                } else if (enemyCounter> playerCounter)
-                                {
-                                    // defeated
-                                    map[x][y] = typeEmpty;
-                                    globalData.killedEnemy++;
+                            }
+                            if (playerCounter < 2) {
+                                map[x][y] = typeEmpty;
+                                drawPoint(typeEmpty, x, y);
+                            } else if (playerCounter > 3) {
+                                map[x][y] = typeEmpty;
+                                drawPoint(typeEmpty, x, y);
+                            } else if (enemyCounter > playerCounter) {
+                                // defeated
+                                map[x][y] = typeEmpty;
+                                globalData.killedEnemy++;
+                                if (globalData.killedEnemy % 3 == 0) {
                                     globalData.avaliableSeed++;
-                                    drawPoint(typeEmpty,x,y);
-                                }   
+                                }
+                                explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
+                                drawPoint(typeEmpty, x, y);
+                            } else if (globalData.forceAttack >0 && enemyCounter > 0)
+                            {
+                                // force attack
+                                map[x][y] = typePlayer;
+                                globalData.killedEnemy++;
+                                explode(x * pointSize + 10 + pointSize / 2, y * pointSize + 10 + pointSize / 2);
+                                drawPoint(typePlayer, x, y);
                             }
-                            else {
-                                var playerCounter = 0;
-                                var enemyCounter = 0;
-                                for(let kx = -1; kx < 2; kx++){
-                                    for(let ky = -1; ky <2; ky ++){
-                                        if(kx == 0 && ky == 0){
-                                            continue;
-                                        }
-                                        if(map[x+kx][y+ky]==typePlayer)
-                                        {
-                                            playerCounter++;
-                                        }else if(map[x+kx][y+ky]==typeEnemy)
-                                        {
-                                            enemyCounter++;
-                                        }
+                        }
+                        else {
+                            var playerCounter = 0;
+                            var enemyCounter = 0;
+                            for (let kx = -1; kx < 2; kx++) {
+                                for (let ky = -1; ky < 2; ky++) {
+                                    if (kx == 0 && ky == 0) {
+                                        continue;
+                                    }
+                                    if (map[x + kx][y + ky] == typePlayer) {
+                                        playerCounter++;
+                                    } else if (map[x + kx][y + ky] == typeEnemy) {
+                                        enemyCounter++;
                                     }
                                 }
-                                if(playerCounter == 3 && enemyCounter != 3){
-                                    map[x][y] = typePlayer;
-                                    drawPoint(typePlayer,x,y);
-                                }else if (enemyCounter == 3 && playerCounter != 3){
-                                    map[x][y] = typeEnemy;
-                                    drawPoint(typeEnemy,x,y);
-                                }
+                            }
+                            if (playerCounter == 3 && enemyCounter != 3) {
+                                map[x][y] = typePlayer;
+                                drawPoint(typePlayer, x, y);
+                            } else if (enemyCounter == 3 && playerCounter != 3) {
+                                map[x][y] = typeEnemy;
+                                drawPoint(typeEnemy, x, y);
                             }
                         }
                     }
-                    
                 }
-                globalData.playerSoldiers= 0;
-                for (let x = 0; x < map.length; x++) {
-                    for (let y = 0; y < map[x].length; y++) {
-                        if(map[x][y] == typePlayer)
-                        {
-                            globalData.playerSoldiers ++;
+
+            }
+            // ========== pose update ============= //
+            globalData.playerPeople = 0;
+            globalData.enemyPeople = 0;
+            for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                    if (map[x][y] == typePlayer) {
+                        globalData.playerPeople++;
+                    } else if (map[x][y] == typeEnemy) {
+                        globalData.enemyPeople++;
+                    }
+                }
+            }
+            if(globalData.forceAttack > 0)
+            {
+                globalData.forceAttack --;
+            }
+            if(globalData.forceDefence > 0)
+            {
+                globalData.forceDefence --;
+            }
+        }
+        function RenderBackground() {
+            fgctx.clearRect(0, 0, c.width, c.height);
+            for (let x = 0; x < map.length; x++) {
+                for (let y = 0; y < map[x].length; y++) {
+                    fgctx.rect(x * pointSize, y * pointSize, pointSize, pointSize);
+
+                }
+            }
+            fgctx.stroke();
+        }
+        function getEventPosition(ev) {
+            var x, y;
+            if (ev.layerX || ev.layerX == 0) {
+                x = ev.layerX;
+                y = ev.layerY;
+            } else if (ev.offsetX || ev.offsetX == 0) { // Opera
+                x = ev.offsetX;
+                y = ev.offsetY;
+            }
+            return { x: x, y: y };
+        }
+
+        fgc.addEventListener('click', function (e) {
+            p = getEventPosition(e);
+            x = Math.floor(p.x / pointSize);
+            y = Math.floor(p.y / pointSize);
+            if (globalData.avaliableSeed > 0) {
+                enemyAround = 0;
+                for (let kx = -1; kx < 2; kx++) {
+                    for (let ky = -1; ky < 2; ky++) {
+                        var tx = x + kx;
+                        var ty = y + ky;
+                        if (tx < 0 || tx > map_size || ty < 0 || ty > map_size) {
+                            continue;
+                        }
+                        if (map[tx][ty] == typeEnemy) {
+                            enemyAround++;
                         }
                     }
                 }
-            }
-            function RenderBackground() {
-                fgctx.clearRect(0, 0, c.width, c.height);
-                for (let x = 0; x < map.length; x++) {
-                    for (let y = 0; y < map[x].length; y++) {
-                        fgctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
-                        
-                    }
-                }
-                fgctx.stroke();
-            }
-            function getEventPosition(ev){
-                var x, y;
-                if (ev.layerX || ev.layerX == 0) {
-                    x = ev.layerX;
-                    y = ev.layerY;
-                } else if (ev.offsetX || ev.offsetX == 0) { // Opera
-                    x = ev.offsetX;
-                    y = ev.offsetY;
-                }
-                return {x: x, y: y};
-            }
-
-            fgc.addEventListener('click', function(e){
-                p = getEventPosition(e);
-                x = Math.floor(p.x / pointSize);
-                y = Math.floor(p.y / pointSize);
-                if(globalData.avaliableSeed > 0)
-                {
+                if (enemyAround > 0) {
+                    alert("cannot put seed at the position near enemy");
+                } else {
                     map[x][y] = typePlayer;
-                    drawPoint(typePlayer,x,y);
+                    drawPoint(typePlayer, x, y);
                     globalData.avaliableSeed--;
                 }
 
-            });
-            function tick() {
-                console.log("ticked");
-                updateElement();
-                //Render();
+            } else {
+                alert("no more seeds");
             }
-            function initMap(){
-                for (let x = 0; x < map.length / 3; x++) {
-                    for (let y = 0; y < map[x].length / 3; y++) {
-                        if(Math.random()<0.3)
-                        {
-                            map[x][y] = typeEnemy;
-                            globalData.avaliableSeed++;
-                            drawPoint(typeEnemy,x,y);
-                        }
+
+        });
+        function tick() {
+            console.log("ticked");
+            updateElement();
+            //Render();
+        }
+        function initMap() {
+            for (let x = 0; x < map.length / 2; x++) {
+                for (let y = 0; y < map[x].length / 2; y++) {
+                    if (Math.random() < 0.3) {
+                        map[x][y] = typeEnemy;
+                        //globalData.avaliableSeed++;
+                        drawPoint(typeEnemy, x, y);
                     }
                 }
             }
-            
-            RenderBackground();
-            initMap();
-            var app = new Vue({
+            for (let x = map.length / 2; x < map.length; x++) {
+                for (let y = map.length / 2; y < map.length; y++) {
+                    if (Math.random() < 0.3) {
+                        map[x][y] = typePlayer;
+                        //globalData.avaliableSeed++;
+                        drawPoint(typePlayer, x, y);
+                    }
+                }
+            }
+        }
+
+        RenderBackground();
+        initMap();
+        var app = new Vue({
             el: '#app',
             data: globalData
+        })
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
             })
-        </script>
-    </body>
+    </script>
+    <script>
+        // click event listener
+        // $('body').on('click', function(e) {
+        // explode(e.pageX, e.pageY);
+        // })
+
+        // explosion construction
+        function explode(x, y) {
+            var particles = 15,
+                // explosion container and its reference to be able to delete it on animation end
+                explosion = $('<div class="explosion"></div>');
+
+            // put the explosion container into the body to be able to get it's size
+            $('body').append(explosion);
+
+            // position the container to be centered on click
+            explosion.css('left', x - explosion.width() / 2);
+            explosion.css('top', y - explosion.height() / 2);
+
+            for (var i = 0; i < particles; i++) {
+                // positioning x,y of the particle on the circle (little randomized radius)
+
+                var x = (explosion.width() / 2) + rand(80, 150) * Math.cos(2 * Math.PI * i / rand(particles - 10, particles + 10)),
+                    y = (explosion.height() / 2) + rand(80, 150) * Math.sin(2 * Math.PI * i / rand(particles - 10, particles + 10)),
+                    color = 128 + ', ' + 128 + ', ' + 128, // randomize the color rgb
+                    // particle element creation (could be anything other than div)
+                    elm = $('<div class="particle" style="' +
+                        'background-color: rgb(' + color + ') ;' +
+                        'top: ' + y + 'px; ' +
+                        'left: ' + x + 'px"></div>');
+
+                if (i == 0) { // no need to add the listener on all generated elements
+                    // css3 animation end detection
+                    elm.one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function (e) {
+                        explosion.remove(); // remove this explosion container when animation ended
+                    });
+                }
+                explosion.append(elm);
+            }
+        }
+
+        // get random number between min and max value
+        function rand(min, max) {
+            return Math.floor(Math.random() * (max + 1)) + min;
+        }
+    </script>
+</body>
+
 </html>

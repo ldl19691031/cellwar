@@ -1,0 +1,136 @@
+
+  .explosion {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    pointer-events: none;
+}
+
+.explosion .particle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 0%;
+    animation: pop 1s reverse forwards;
+}
+
+@keyframes pop {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        top: 50%;
+        left: 50%;
+        opacity: 1;
+    }
+}
+
+.moduleAnimationShock {
+    animation-name: diagonal-slide;
+    animation-duration: 0.05s;
+    animation-iteration-count: 10;
+    animation-fill-mode: forwards;
+}
+table.greyGridTable {
+border: 2px solid #FFFFFF;
+width: 100%;
+text-align: center;
+border-collapse: collapse;
+}
+table.greyGridTable td, table.greyGridTable th {
+border: 1px solid #FFFFFF;
+padding: 3px 4px;
+}
+table.greyGridTable tbody td {
+font-size: 13px;
+}
+table.greyGridTable td:nth-child(even) {
+background: #EBEBEB;
+}
+table.greyGridTable tfoot td {
+font-size: 14px;
+}
+@keyframes diagonal-slide {
+    from {
+        top: 0;
+        left: 0;
+        animation-timing-function: linear;
+    }
+
+    20% {
+        top: -5px;
+        left: -5px;
+        animation-timing-function: linear;
+    }
+
+    40% {
+        top: 5px;
+        left: -5px;
+        animation-timing-function: linear;
+    }
+
+    60% {
+        top: 5px;
+        left: 5px;
+        animation-timing-function: linear;
+    }
+
+    80% {
+        top: -5px;
+        left: 5px;
+        animation-timing-function: linear;
+    }
+
+    to {
+        top: 0;
+        left: 0;
+        animation-timing-function: linear;
+    }
+}
+
+.tabs {
+	clear: both;
+	position: relative;   
+   max-width: 650px;
+   margin: 0 auto;
+   /* you can either manually set a min-height here or do it via JS ---> */
+}
+
+.tab {
+	float: left;
+}
+
+.tab label {
+	margin-right: 20px;
+	position: relative;
+	top: 0;
+	cursor: pointer;
+	color: #333;
+   text-transform: uppercase;
+}
+
+.tab [type=radio] {
+	display: none;   
+}
+
+.tab__content {
+   position: relative;
+	top: 40px;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	transition: opacity .2s cubic-bezier(.42,0,.34,1.01);
+	opacity: 0;
+}
+
+[type=radio]:checked ~ label {
+	border-bottom: 2px solid #1d1d1d;
+	color: #1d1d1d;
+	z-index: 2;
+}
+
+[type=radio]:checked ~ label ~ .tab__content {
+	z-index: 1;
+	opacity: 1;
+}
