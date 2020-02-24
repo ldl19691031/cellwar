@@ -311,17 +311,8 @@
         var map_size = 0;
         var map = null;
         $('#myModal').modal('show');
-        $('#myModal').on('hidden.bs.modal', function () {
-            map_size = 1024 / pointSize;
-            map = Array(map_size)
-            for (let index = 0; index < map_size; index++) {
-                map[index] = new Array(map_size);
-                for (let j = 0; j < map_size; j++) {
-                    map[index][j] = typeEmpty; //empty
-                }
-            }
-
-            fgc.addEventListener('click', function (e) {
+        function processMouse(e)
+        {
                 p = getEventPosition(e);
                 x = Math.floor(p.x / pointSize);
                 y = Math.floor(p.y / pointSize);
@@ -356,8 +347,38 @@
                     alertPopup("no more seeds");
                 }
 
-            });
+        }
+        var isMouseLeftButtonDown = false;
+        $('#myModal').on('hidden.bs.modal', function () {
+            map_size = 1024 / pointSize;
+            map = Array(map_size)
+            for (let index = 0; index < map_size; index++) {
+                map[index] = new Array(map_size);
+                for (let j = 0; j < map_size; j++) {
+                    map[index][j] = typeEmpty; //empty
+                }
+            }
 
+            //fgc.addEventListener('click', processMouse);
+            fgc.addEventListener('mousedown', function(e)
+            {
+                if(e.button == 0){
+                    isMouseLeftButtonDown = true;
+                }
+            });
+            fgc.addEventListener('mouseup', function(e)
+            {
+//                if(e.button == 0){
+                    isMouseLeftButtonDown = false;
+//                }
+            });
+            fgc.addEventListener('mousemove', function(e){
+                if(isMouseLeftButtonDown)
+                {
+                    processMouse(e);
+                }
+            });
+            
             RenderBackground();
             initMap();
 
