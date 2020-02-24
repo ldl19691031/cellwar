@@ -250,14 +250,28 @@
                 <div class="modal-body">
                     <div>
                         <h3>地图分辨率设置</h3>
-                        <button class="btn btn-light" onclick="pointSize=32">小</button>
-                        <button class="btn btn-light" onclick="pointSize=16">正常</button>
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn btn-light">
+                                <input type="radio" name="options" id="option1" autocomplete="off" onclick="pointSize=32"> 小
+                              </label>
+                              <label class="btn btn-light">
+                                <input type="radio" name="options" id="option2" autocomplete="off" onclick="pointSize=16"> 正常
+                              </label>
+                        </div>
                     </div>
                     <div>
                         <h3>难度设置</h3>
-                        <button class="btn btn-light" onclick="globalData.enemyDeathRate=0.79">简单</button>
-                        <button class="btn btn-light" onclick="globalData.enemyDeathRate=0.75">普通</button>
-                        <button class="btn btn-light" onclick="globalData.enemyDeathRate=0.73">困难</button>
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                            <label class="btn btn-light">
+                                <input type="radio" name="options" id="option1" autocomplete="off" onclick="globalData.enemyDeathRate=0.79"> 简单
+                              </label>
+                              <label class="btn btn-light">
+                                <input type="radio" name="options" id="option2" autocomplete="off" onclick="globalData.enemyDeathRate=0.75"> 普通
+                              </label>
+                              <label class="btn btn-light">
+                                <input type="radio" name="options" id="option3" autocomplete="off" onclick="globalData.enemyDeathRate=0.73"> 困难
+                              </label>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
