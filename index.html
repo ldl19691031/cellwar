@@ -2,10 +2,8 @@
 
 <head>
     <script src="https://cdn.jsdelivr.net/npm/vue"></script>
-    <script
-    src="https://code.jquery.com/jquery-3.4.1.min.js"
-    integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-    crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
         crossorigin="anonymous"></script>
@@ -127,7 +125,7 @@
 
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
             <h1>Cell War</h1>
-            <p>v 0.0.2</p>
+            <p>v 0.0.3</p>
             <h3>player People: {{playerPeople}} / enemy People {{ enemyPeople }}</h3>
             <svg width="600" height="20">
                 <rect v-bind:width="playerPeople / (playerPeople + enemyPeople) * 600" height="20"
@@ -186,8 +184,8 @@
                     Force Attack ( {{globalData.forceAttackCost}} seed )
                 </button>
                 <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip"
-                    data-placement="top" title="消耗种子进行强制征兵，4回合内强行降低我方死亡率">
-                    Force Conscript ( {{globalData.forceDefenceCost}} seed )
+                    data-placement="top" title="消耗种子释放生物武器，4回合内提升敌方死亡率">
+                    Biological Weapons ( {{globalData.forceDefenceCost}} seed )
                 </button>
             </div>
         </div>
@@ -246,6 +244,40 @@
 
 
         </div>
+        <div class="modal fade" id="gameOverModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> -->
+                        <h4 class="modal-title" id="myModalLabel">Game Over</h4>
+                    </div>
+                    <div class="modal-body">
+                        很遗憾，经过{{generation}}代的战斗，你的生命群落终究没能战胜对方，消失在了历史的长河之中。
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">重新开始</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+        <div class="modal fade" id="gameWinModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> -->
+                        <h4 class="modal-title" id="myModalLabel">You Win</h4>
+                    </div>
+                    <div class="modal-body">
+                        经过{{generation}}代的战斗，你的生命群落战胜了对方，占领了整个区域。<br/>
+                        为了这一刻，{{deadSoldier}}个细胞牺牲在了战场之上，请永远不要忘记他们<br/>
+                        微小的生命转瞬即逝，种群的历史长流不息。
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-dismiss="modal">重新开始</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
     </div>
     <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -259,26 +291,43 @@
                         <h3>地图分辨率设置</h3>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="width: 100%;">
                             <label class="btn btn-light">
-                                <input type="radio" name="options" id="option1" autocomplete="off" onclick="pointSize=32"> 小
-                              </label>
-                              <label class="btn btn-light">
-                                <input type="radio" name="options" id="option2" autocomplete="off" onclick="pointSize=16"> 正常
-                              </label>
+                                <input type="radio" name="options" id="option1" autocomplete="off"
+                                    onclick="pointSize=32"> 小
+                            </label>
+                            <label class="btn btn-light">
+                                <input type="radio" name="options" id="option2" autocomplete="off"
+                                    onclick="pointSize=16"> 正常
+                            </label>
                         </div>
                     </div>
                     <div>
                         <h3>难度设置</h3>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="width: 100%;">
                             <label class="btn btn-light">
-                                <input type="radio" name="options" id="option1" autocomplete="off" onclick="globalData.enemyDeathRate=0.79"> 简单
-                              </label>
-                              <label class="btn btn-light">
-                                <input type="radio" name="options" id="option2" autocomplete="off" onclick="globalData.enemyDeathRate=0.75"> 普通
-                              </label>
-                              <label class="btn btn-light">
-                                <input type="radio" name="options" id="option3" autocomplete="off" onclick="globalData.enemyDeathRate=0.73"> 困难
-                              </label>
+                                <input type="radio" name="options" id="option1" autocomplete="off"
+                                    onclick="globalData.enemyDeathRate=0.79"> 简单
+                            </label>
+                            <label class="btn btn-light">
+                                <input type="radio" name="options" id="option2" autocomplete="off"
+                                    onclick="globalData.enemyDeathRate=0.75"> 普通
+                            </label>
+                            <label class="btn btn-light">
+                                <input type="radio" name="options" id="option3" autocomplete="off"
+                                    onclick="globalData.enemyDeathRate=0.73"> 困难
+                            </label>
                         </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">0.0.3 更新说明</h4>
+                            <p class="card-text">
+                                1. 增加了游戏的结局
+                            </p>
+                            <p class="card-text">
+                                2. 修改了force Defence，该功能现在为“生物武器”，效果为增加敌方死亡率
+                            </p>
+                        </div>
+                        
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -287,6 +336,7 @@
             </div><!-- /.modal-content -->
         </div><!-- /.modal -->
     </div>
+
     <script>
         const typeEmpty = 0;
         const typePlayer = 1;
@@ -311,41 +361,40 @@
         var map_size = 0;
         var map = null;
         $('#myModal').modal('show');
-        function processMouse(e)
-        {
-                p = getEventPosition(e);
-                x = Math.floor(p.x / pointSize);
-                y = Math.floor(p.y / pointSize);
-                if (map[x][y] == typePlayer || map[x][y] == typeEnemy) {
-                    return;
-                }
-                if (globalData.avaliableSeed > 0) {
-                    enemyAround = 0;
-                    for (let kx = -1; kx < 2; kx++) {
-                        for (let ky = -1; ky < 2; ky++) {
-                            var tx = x + kx;
-                            var ty = y + ky;
-                            if (tx < 0 || tx > map_size || ty < 0 || ty > map_size) {
-                                continue;
-                            }
-                            if (map[tx][ty] == typeEnemy) {
-                                enemyAround++;
-                            }
+        function processMouse(e) {
+            p = getEventPosition(e);
+            x = Math.floor(p.x / pointSize);
+            y = Math.floor(p.y / pointSize);
+            if (map[x][y] == typePlayer || map[x][y] == typeEnemy) {
+                return;
+            }
+            if (globalData.avaliableSeed > 0) {
+                enemyAround = 0;
+                for (let kx = -1; kx < 2; kx++) {
+                    for (let ky = -1; ky < 2; ky++) {
+                        var tx = x + kx;
+                        var ty = y + ky;
+                        if (tx < 0 || tx > map_size || ty < 0 || ty > map_size) {
+                            continue;
+                        }
+                        if (map[tx][ty] == typeEnemy) {
+                            enemyAround++;
                         }
                     }
-                    if (enemyAround > 0) {
-                        //alert("cannot put seed at the position near enemy");
-                        alertPopup("cannot put seed at the position near enemy");
-                    } else {
-                        map[x][y] = typePlayer;
-                        drawPoint(typePlayer, x, y);
-                        globalData.avaliableSeed--;
-                    }
-
-                } else {
-                    //alert("no more seeds");
-                    alertPopup("no more seeds");
                 }
+                if (enemyAround > 0) {
+                    //alert("cannot put seed at the position near enemy");
+                    alertPopup("cannot put seed at the position near enemy");
+                } else {
+                    map[x][y] = typePlayer;
+                    drawPoint(typePlayer, x, y);
+                    globalData.avaliableSeed--;
+                }
+
+            } else {
+                //alert("no more seeds");
+                alertPopup("no more seeds");
+            }
 
         }
         var isMouseLeftButtonDown = false;
@@ -360,25 +409,22 @@
             }
 
             fgc.addEventListener('click', processMouse);
-            fgc.addEventListener('mousedown', function(e)
-            {
-                if(e.button == 0){
+            fgc.addEventListener('mousedown', function (e) {
+                if (e.button == 0) {
                     isMouseLeftButtonDown = true;
                 }
             });
-            fgc.addEventListener('mouseup', function(e)
-            {
-//                if(e.button == 0){
-                    isMouseLeftButtonDown = false;
-//                }
+            fgc.addEventListener('mouseup', function (e) {
+                //                if(e.button == 0){
+                isMouseLeftButtonDown = false;
+                //                }
             });
-            fgc.addEventListener('mousemove', function(e){
-                if(isMouseLeftButtonDown)
-                {
+            fgc.addEventListener('mousemove', function (e) {
+                if (isMouseLeftButtonDown) {
                     processMouse(e);
                 }
             });
-            
+
             RenderBackground();
             initMap();
 
@@ -404,13 +450,28 @@
             // ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
             // ctx.stroke();
         }
-        function alertPopup(message)
-        {
+        function alertPopup(message) {
             globalData.alertMessage = message;
-            $("#alertBox").fadeTo(2000, 500).slideUp(500, function(){
+            $("#alertBox").fadeTo(2000, 500).slideUp(500, function () {
                 $("#alertBox").slideUp(500);
             });
 
+        }
+        function gameEnd(isWin)
+        {
+            window.clearInterval(globalData.tickHandle);globalData.tickHandle=null;
+            if(isWin)
+            {
+                $('#gameWinModal').modal('show');
+                $('#gameWinModal').on('hidden.bs.modal', function () {
+                    window.location.reload();
+                });
+            }else{
+                $('#gameOverModal').modal('show');
+                $('#gameOverModal').on('hidden.bs.modal', function () {
+                    window.location.reload();
+                });
+            }
         }
         function forceAttack() {
             if (globalData.avaliableSeed < globalData.forceAttackCost) {
@@ -427,12 +488,14 @@
                 return;
             }
             globalData.forceDefence += 4;
-            globalData.playerDeathRate = 0.35;
+            globalData.oldEnemyDeatRate = globalData.enemyDeathRate;
+            globalData.enemyDeathRate = 1.0;
             globalData.avaliableSeed -= globalData.forceDefenceCost;
             globalData.forceDefenceCost++;
         }
         function updateElement() {
             globalData.generation++;
+
             if (globalData.generation % 10 == 0) {
                 globalData.avaliableSeed++;
             }
@@ -554,13 +617,21 @@
                     }
                 }
             }
+            if(globalData.enemyPeople==0)
+            {
+                gameEnd(true);
+            }
+            if(globalData.playerPeople==0)
+            {
+                gameEnd(false);
+            }
             if (globalData.forceAttack > 0) {
                 globalData.forceAttack--;
             }
             if (globalData.forceDefence > 0) {
                 globalData.forceDefence--;
                 if (globalData.forceDefence == 0) {
-                    globalData.playerDeathRate = 0.8;
+                    globalData.enemyDeathRate = globalData.oldEnemyDeatRate;
                 }
             }
             for (let x = 0; x < map.length; x++) {
@@ -623,8 +694,8 @@
         $(function () {
             $('[data-toggle="tooltip"]').tooltip()
         })
-        $(document).ready(function() {
-  $("#alertBox").hide();
+        $(document).ready(function () {
+            $("#alertBox").hide();
         });
     </script>
     <script>
