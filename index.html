@@ -152,7 +152,6 @@
                     <td>{{deadSoldier}}</th>
                 </tr>
             </table>
-
             <!-- <h3>generation:{{generation}}</h3>
             
             <h3>avaliable seed: {{avaliableSeed}}</h3>
@@ -356,7 +355,9 @@
             forceDefenceCost: 5,
             playerDeathRate: 0.8,
             enemyDeathRate: 0.735,
-            alertMessage: ""
+            alertMessage: "",
+            map_size: 0,
+            map:null
         };
         var map_size = 0;
         var map = null;
@@ -400,7 +401,9 @@
         var isMouseLeftButtonDown = false;
         $('#myModal').on('hidden.bs.modal', function () {
             map_size = 1024 / pointSize;
-            map = Array(map_size)
+            map = Array(map_size);
+            globalData.map_size = map_size;
+            globalData.map = map;
             for (let index = 0; index < map_size; index++) {
                 map[index] = new Array(map_size);
                 for (let j = 0; j < map_size; j++) {
@@ -447,8 +450,7 @@
                 ctx.fillStyle = 'salmon';
                 ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
             }
-            // ctx.rect(x*pointSize,y*pointSize,pointSize,pointSize);
-            // ctx.stroke();
+
         }
         function alertPopup(message) {
             globalData.alertMessage = message;
@@ -648,6 +650,8 @@
 
                 }
             }
+            fgctx.strokeStyle="#363636";
+            fgctx.lineWidth = 0.5;
             fgctx.stroke();
         }
         function getEventPosition(ev) {
@@ -689,7 +693,14 @@
 
         var app = new Vue({
             el: '#app',
-            data: globalData
+            data: globalData,
+            methods: {
+                selectCell(row, col) {
+                    console.log(globalData.map[row][col]);
+                    },
+                cellSelected(row, col) {
+                    console.log(globalData.map[row][col]);
+                    }}
         })
         $(function () {
             $('[data-toggle="tooltip"]').tooltip()
