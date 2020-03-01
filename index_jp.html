@@ -126,9 +126,9 @@
     <div id="app" style="position: absolute;top: 10px;left: 1044px;">
 
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
-            <h1>Cell War</h1>
+            <h1>セル戦争</h1>
             <p>v 0.0.3</p>
-            <h3>player People: {{playerPeople}} / enemy People {{ enemyPeople }}</h3>
+            <h3>プレイヤーのセル: {{playerPeople}} / 敵人のセル {{ enemyPeople }}</h3>
             <svg width="600" height="20">
                 <rect v-bind:width="playerPeople / (playerPeople + enemyPeople) * 600" height="20"
                     style="fill:darkslategray;stroke-width:1;stroke:rgb(0,0,0)" />
@@ -138,19 +138,19 @@
             </svg>
             <table class="table">
                 <tr>
-                    <th>generation</th>
+                    <th>世代</th>
                     <td>{{generation}}</th>
                 </tr>
                 <tr>
-                    <th>avaliable seed</th>
+                    <th>利用できるシード数</th>
                     <td>{{avaliableSeed}}</th>
                 </tr>
                 <tr>
-                    <th>killed enemy</th>
+                    <th>敵を殺した数</th>
                     <td>{{killedEnemy}}</th>
                 </tr>
                 <tr>
-                    <th>dead soldier</th>
+                    <th>死んだセル</th>
                     <td>{{deadSoldier}}</th>
                 </tr>
             </table>
@@ -159,7 +159,7 @@
             <h3>avaliable seed: {{avaliableSeed}}</h3>
             <h3>killed enemy: {{killedEnemy}}</h3>
             <h3>dead solider: {{deadSoldier}}</h3> -->
-            <h3 v-if="avaliableSeed > 0"> Please set {{avaliableSeed}} points as initial seed.</h3>
+            <h3 v-if="avaliableSeed > 0"> 初期シードとして　{{avaliableSeed}}　ポイントを設定してください。</h3>
             <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
 
                 <button
@@ -181,17 +181,17 @@
             </div>
             <div class="btn-group" role="group" style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
                 <button type="button" onclick="forceAttack()" class="btn btn-light" data-toggle="tooltip"
-                    data-placement="top" title="消耗种子，3回合内强行推进我方战线">
-                    Force Attack ( {{globalData.forceAttackCost}} seed )
+                    data-placement="top" title="シードを消費し、3ラウンドで強制的に前に進みます">
+                    Force Attack ( {{globalData.forceAttackCost}} シード )
                 </button>
                 <button type="button" onclick="forceDefence()" class="btn btn-light" data-toggle="tooltip"
-                    data-placement="top" title="消耗种子释放生物武器，4回合内提升敌方死亡率">
-                    Biological Weapons ( {{globalData.forceDefenceCost}} seed )
+                    data-placement="top" title="シードを消費して生物兵器を放出し、4ターン以内に敵の死亡率を上げる">
+                    Biological Weapons ( {{globalData.forceDefenceCost}}  シード )
                 </button>
             </div>
         </div>
         <div class="alert alert-warning" id="alertBox">
-            <strong>Error!</strong> {{alertMessage}}
+            <strong>エラー！</strong> {{alertMessage}}
         </div>
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
             <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -215,28 +215,28 @@
 
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="basic" role="tabpanel" aria-labelledby="home-tab">
-                    <h2>基础规则</h2>
-                    1. 每个细胞有两种状态 - 存活或死亡，每个细胞与以自身为中心的周围八格细胞产生互动（如图，黑色为存活，白色为死亡）<br />
-                    2. 当前细胞为存活状态时，当周围的存活细胞低于2个时（不包含2个），该细胞变成死亡状态。（模拟生命数量稀少）<br />
-                    3. 当前细胞为存活状态时，当周围有2个或3个存活细胞时，该细胞保持原样。<br />
-                    4. 当前细胞为存活状态时，当周围有超过3个存活细胞时，该细胞<b>按一定概率</b>变成死亡状态。（模拟生命数量过多）<br />
-                    <strong>请注意，这与标准的生命游戏不同！并且，敌人会有略微低一些的死亡率，从而平衡敌人与玩家的难度。</strong><br />
-                    5. 当前细胞为死亡状态时，当周围有3个存活细胞时，该细胞变成存活状态。<br />
+                    <h2>基本ルール</h2>
+                    1. 各セルには2つの状態（生存または死）があり、各セルはそれ自体を中心とする周囲の8つのセルと相互作用します<br />
+                    2. 現在のセルが生きている状態のとき、周囲のセルが2つ未満（2つを除く）あるとき、セルは死にます。<br />
+                    3. 現在のセルが生きている状態にある、そして周囲に2つまたは3つの生きているセルがあるとき、セルはそのまま残ります。<br />
+                    4. 現在のセルが生きている、そして周囲に3つ以上の生きているセルがあるとき、，このセルは<b>確率によって</b>死にます<br />
+                    <strong>これは標準的なライフゲームとは異なることに注意してください！ さらに、敵の死亡率はわずかに低くなるため、敵とプレイヤーの難易度のバランスが取れます。</strong><br />
+                    5. 現在のセルが死んだ状態にあるとき、周囲に3つの生きているセルがあるとき、セルは生きた状態になります。<br />
                 </div>
                 <div class="tab-pane fade" id="war" role="tabpanel" aria-labelledby="profile-tab">
-                    <h2>战争规则</h2>
-                    当某个细胞周围的己方细胞少于敌方细胞时，细胞死亡。<br />
-                    玩家的细胞每杀死3个敌方细胞，则获得一个随机种子<br />
+                    <h2>戦争のルール</h2>
+                    特定のセルの周囲のセル数は敵のセルより小さい場合、セルは死にます。<br />
+                    プレイヤーは、敵の細胞が3つ殺されるたびにシードを受け取ります<br />
                 </div>
                 <div class="tab-pane fade" id="control" role="tabpanel" aria-labelledby="contact-tab">
-                    <h2>玩家控制</h2>
-                    开局你拥有 {{avaliableSeed}} 个随机种子，请点击鼠标左键摆放他们。摆放的目标位置周围的8个格子内不能有敌方细胞<br />
-                    每10回合你将获得一个新的随机种子，可以添加到世界中。<br />
-                    同时，你方击杀对方，也将获得新的种子。<br />
+                    <h2>プレイヤーコントロール</h2>
+                    開始するには、{{avaliableSeed}}のランダムシードがあります。マウスの左ボタンをクリックして配置してください。 ターゲット位置の周囲の8つのセルに敵のセルが存在すれば、配置することができません<br />
+                    10ラウンドごとに、世界に追加できる新しいランダムシードを取得します。<br />
+                    同時に、あなたは敵人のセルを殺すことによって新しい種を得るでしょう。<br />
                 </div>
                 <div class="tab-pane fade" id="advance" role="tabpanel" aria-labelledby="contact-tab">
-                    <h2>进阶介绍</h2>
-                    系统的基石是“康威生命游戏”，你可以点击<a href="https://zhuanlan.zhihu.com/p/45026142" target="_blank">这里</a>来查看更多的信息
+                    <h2>紹介</h2>
+                    システムの基礎は「Conway Life Game」です。<a href="https://ja.wikipedia.org/wiki/%E3%83%A9%E3%82%A4%E3%83%95%E3%82%B2%E3%83%BC%E3%83%A0" target="_blank">ここ</a>に詳しい紹介があります
                 </div>
             </div>
 
@@ -289,7 +289,7 @@
                 </div>
                 <div class="modal-body">
                     <div>
-                        <h3>地图分辨率设置</h3>
+                        <h3>地図の解像度設定</h3>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="width: 100%;">
                             <label class="btn btn-light">
                                 <input type="radio" name="options" id="option1" autocomplete="off"
@@ -297,16 +297,16 @@
                             </label>
                             <label class="btn btn-light">
                                 <input type="radio" name="options" id="option2" autocomplete="off"
-                                    onclick="pointSize=16"> 正常
+                                    onclick="pointSize=16"> 普通
                             </label>
                         </div>
                     </div>
                     <div>
-                        <h3>难度设置</h3>
+                        <h3>難易度設定</h3>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons" style="width: 100%;">
                             <label class="btn btn-light">
                                 <input type="radio" name="options" id="option1" autocomplete="off"
-                                    onclick="globalData.enemyDeathRate=0.79"> 简单
+                                    onclick="globalData.enemyDeathRate=0.79"> 簡単
                             </label>
                             <label class="btn btn-light">
                                 <input type="radio" name="options" id="option2" autocomplete="off"
@@ -314,11 +314,11 @@
                             </label>
                             <label class="btn btn-light">
                                 <input type="radio" name="options" id="option3" autocomplete="off"
-                                    onclick="globalData.enemyDeathRate=0.73"> 困难
+                                    onclick="globalData.enemyDeathRate=0.73"> 難しい
                             </label>
                         </div>
                     </div>
-                    <div class="card">
+                    <!-- <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">0.0.3 更新说明</h4>
                             <p class="card-text">
@@ -329,7 +329,7 @@
                             </p>
                         </div>
                         
-                    </div>
+                    </div> -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-dismiss="modal">开始游戏</button>
@@ -390,8 +390,8 @@
                     }
                 }
                 if (enemyAround > 0) {
-                    //alert("cannot put seed at the position near enemy");
-                    alertPopup("cannot put seed at the position near enemy");
+                    //alert("敵に近い位置に種を置くことはできません");
+                    alertPopup("敵に近い位置に種を置くことはできません");
                 } else {
                     map[x][y] = typePlayer;
                     drawPoint(typePlayer, x, y);
@@ -424,8 +424,8 @@
                     }
                 }
                 if (enemyAround > 0) {
-                    //alert("cannot put seed at the position near enemy");
-                    alertPopup("cannot put seed at the position near enemy");
+                    //alert("敵に近い位置に種を置くことはできません");
+                    alertPopup("敵に近い位置に種を置くことはできません");
                 } else {
                     map[x][y] = typePlayer;
                     //drawPoint(typePlayer, x, y);
