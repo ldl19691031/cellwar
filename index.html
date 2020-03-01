@@ -10,6 +10,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/konva@4.1.6/konva.min.js"></script>
     <title>cell war</title>
     <style>
         .explosion {
@@ -118,9 +119,10 @@
 
 <body>
     <canvas id="fgCanvas" width="1024" height="1024"
-        style="position: absolute;top: 10px;left: 10px;z-index: 1;"></canvas>
+        style="position: absolute;top: 10px;left: 10px;z-index: 1; visibility: hidden;"></canvas>
     <canvas id="mainCanvas" width="1024" height="1024"
-        style="position: absolute;top: 10px;left: 10px;background: lightgray;z-index: 0;"></canvas>
+        style="position: absolute;top: 10px;left: 10px;background: lightgray;z-index: 0; visibility: hidden;"></canvas>
+    <div id="container" style="position: absolute;top: 10px;left: 10px; "></div>
     <div id="app" style="position: absolute;top: 10px;left: 1044px;">
 
         <div style="border: 1px dotted lightgray; margin: 10px;padding: 10px">
@@ -341,6 +343,9 @@
         const typePlayer = 1;
         const typeEnemy = 2;
         var pointSize = 16;
+        const playerColor = 'darkslategray';
+        const enemyColor = 'salmon';
+        const transitionTime = 0.15;
         var globalData = {
             playerPeople: 0,
             enemyPeople: 0,
@@ -361,6 +366,7 @@
         };
         var map_size = 0;
         var map = null;
+        var enableCanvas = false;
         $('#myModal').modal('show');
         function processMouse(e) {
             p = getEventPosition(e);
@@ -398,6 +404,46 @@
             }
 
         }
+        function processBlock(x,y)
+        {
+            if (map[x][y] == typePlayer || map[x][y] == typeEnemy) {
+                return;
+            }
+            if (globalData.avaliableSeed > 0) {
+                enemyAround = 0;
+                for (let kx = -1; kx < 2; kx++) {
+                    for (let ky = -1; ky < 2; ky++) {
+                        var tx = x + kx;
+                        var ty = y + ky;
+                        if (tx < 0 || tx > map_size || ty < 0 || ty > map_size) {
+                            continue;
+                        }
+                        if (map[tx][ty] == typeEnemy) {
+                            enemyAround++;
+                        }
+                    }
+                }
+                if (enemyAround > 0) {
+                    //alert("cannot put seed at the position near enemy");
+                    alertPopup("cannot put seed at the position near enemy");
+                } else {
+                    map[x][y] = typePlayer;
+                    //drawPoint(typePlayer, x, y);
+                    var tween = new Konva.Tween({
+                        node: globalData.konvaMap[x][y],
+                        duration: transitionTime,
+                        fill: playerColor,
+                    });
+                    tween.play();
+                    globalData.avaliableSeed--;
+                }
+
+            } else {
+                //alert("no more seeds");
+                alertPopup("no more seeds");
+            }
+            //globalData.elementLayer.draw();
+        }
         var isMouseLeftButtonDown = false;
         $('#myModal').on('hidden.bs.modal', function () {
             map_size = 1024 / pointSize;
@@ -429,8 +475,9 @@
             });
 
             RenderBackground();
+            initKonva();
             initMap();
-
+            
         });
 
 
@@ -439,19 +486,40 @@
         var fgc = document.getElementById("fgCanvas");
         var ctx = c.getContext("2d");
         var fgctx = fgc.getContext("2d");
+        function transitionColor(x,y, color)
+        {
+            var tween = new Konva.Tween({
+                        node: globalData.konvaMap[x][y],
+                        duration: transitionTime,
+                        fill: color,
+                    });
+            tween.play();
+            
+        }
         function drawPoint(type, x, y) {
             if (type == typePlayer) {
+
                 ctx.fillStyle = 'darkslategray';
-                ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+                if(enableCanvas)
+                    ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+                //globalData.konvaMap[x][y].fill('darkslategray');
+                transitionColor(x,y,playerColor);
             } else if (type == typeEmpty) {
                 ctx.fillStyle = 'lightgray';
-                ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+                if(enableCanvas)
+                    ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+                //globalData.konvaMap[x][y].fill('lightgray');
+                transitionColor(x,y,'lightgray');
             } else if (type == typeEnemy) {
                 ctx.fillStyle = 'salmon';
-                ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+                if(enableCanvas)
+                    ctx.fillRect(x * pointSize, y * pointSize, pointSize, pointSize);
+                //globalData.konvaMap[x][y].fill('salmon');
+                transitionColor(x,y,enemyColor);
             }
-
+            
         }
+        
         function alertPopup(message) {
             globalData.alertMessage = message;
             $("#alertBox").fadeTo(2000, 500).slideUp(500, function () {
@@ -607,6 +675,7 @@
                 }
 
             }
+            //globalData.elementLayer.draw();
             // ========== pose update ============= //
             globalData.playerPeople = 0;
             globalData.enemyPeople = 0;
@@ -689,8 +758,58 @@
                     }
                 }
             }
+            //globalData.elementLayer.draw();
         }
+        function initKonva(){
+            var width = 1024;
+            var height = 1024;
 
+            var stage = new Konva.Stage({
+                container: 'container',
+                width: width,
+                height: height
+            });
+
+            var layer = new Konva.Layer();
+
+
+            globalData.konvaMap = Array(map_size);
+            for (let index = 0; index < map_size; index++) {
+                globalData.konvaMap[index] = new Array(map_size);
+                for (let j = 0; j < map_size; j++) {
+                    var rect = new Konva.Rect({
+                        x: index*pointSize,
+                        y: j * pointSize,
+                        width: pointSize,
+                        height: pointSize,
+                        fill: 'lightgray',
+                        stroke: 'black',
+                        strokeWidth: 1
+                    });
+                    rect.on('mousedown', function(){ processBlock(index,j); console.log("mouse down");});
+                    rect.on('mouseenter', function(){
+                        var tween = new Konva.Tween({
+                            node: globalData.konvaMap[index][j],
+                            duration: 0.3,
+                            shadowBlur: 10,
+                        });
+                        tween.play();
+                    })
+                    rect.on('mouseleave', function(){
+                        var tween = new Konva.Tween({
+                            node: globalData.konvaMap[index][j],
+                            duration: 0.3,
+                            shadowBlur: 0.0
+                        });
+                        tween.play();
+                    })
+                    layer.add(rect);    
+                    globalData.konvaMap[index][j] = rect;
+                }
+            }
+            globalData.elementLayer = layer;
+            stage.add(layer);
+        }
         var app = new Vue({
             el: '#app',
             data: globalData,
